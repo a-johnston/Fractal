@@ -1,6 +1,7 @@
 package psiborg.fractal;
 
 import psiborg.fractal.colors.HueMap;
+import psiborg.fractal.colors.IceyHueMap;
 import psiborg.fractal.generators.MandelbrotGenerator;
 
 public class Runner {

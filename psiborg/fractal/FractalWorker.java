@@ -5,97 +5,61 @@ import java.awt.image.WritableRaster;
 
 import psiborg.fractal.colors.ColorMap;
 import psiborg.fractal.generators.FractalGenerator;
+import psiborg.fractal.jobs.JobQueue;
+import psiborg.fractal.jobs.RenderJob;
 
 public class FractalWorker extends Thread {
-	private BufferedImage image;
 	private WritableRaster raster;
 	
+	private RenderJob job;
 	private boolean dirty;
-	private boolean restart;
-	private int left;
-	
-	private double viewX;
-	private double viewY;
-	private double viewW;
-	private double viewH;
 	
 	private MutableComplexDouble value;
 	private FractalGenerator fractal;
 	private ColorMap colors;
 	
 	public FractalWorker(FractalGenerator fractal, ColorMap colors, BufferedImage image) {
-		this.image = image;
 		this.raster = image.getRaster();
 		this.value = new MutableComplexDouble(0.0, 0.0);
 		this.fractal = fractal;
 		this.colors = colors;
-		
-		this.dirty = false;
-		this.restart = false;
-		this.left = Integer.MAX_VALUE;
-	}
-	
-	public synchronized void setView(double x, double y, double w, double h) {
-		viewX = x;
-		viewY = y;
-		viewW = w;
-		viewH = h;
-		
-		if (!dirty) {
-			dirty = true;
-			notify();
-		} else {
-			restart = true;
-		}
-	}
-	
-	public boolean isDirty() {
-		synchronized (this) {			
-			return dirty;
-		}
 	}
 	
 	@Override
 	public void run() {
+		int x, y;
+		double px;
+		
 		while (true) {
-			while (!dirty) {
-				synchronized (this) {				
-					try {
-						wait();
-					} catch (InterruptedException e) {
-						e.printStackTrace();
-					}
-				}
-			}
-			int x, y;
-			double px;
-			for (x = 0; x < image.getWidth(); x += 1) {
-				px = getX(x);
-				for (y = 0; y < image.getHeight(); y += 1) {
-					if (restart) {
-						x = 0;
-						y = 0;
-						restart = false;
-						continue;
+			job = JobQueue.getJob();
+			dirty = true;
+			
+			for (x = 0; x < job.segment.w; x += 1) {
+				px = getX((int) job.segment.x + x);
+				for (y = 0; y < job.segment.h; y += 1) {
+					if (!job.isActive()) {
+						break;
 					}
 					
-					value.set(px, getY(y));
+					value.set(px, getY((int) job.segment.y + y));
 					int steps = fractal.steps(value);
-					raster.setPixel(x, y, colors.get(steps));
+					raster.setPixel((int) (job.segment.x + x % raster.getWidth()), (int) (job.segment.y + y % raster.getHeight()), colors.get(steps));
 				}
-				left = (image.getWidth() - x - 1) * image.getHeight();
 			}
-			synchronized (this) {				
-				dirty = false;
-			}
+			
+			dirty = false;
 		}
 	}
 	
+	public boolean isDirty() {
+		return dirty;
+	}
+	
 	private synchronized double getX(int x) {
-		return (x / (double) image.getWidth()) * viewW + viewX;
+		return (x / (double) raster.getWidth()) * job.view.w + job.view.x;
 	}
 
 	private synchronized double getY(int y) {
-		return -viewY - (y / (double) image.getHeight() * viewH);
+		return -job.view.y - (y / (double) raster.getHeight() * job.view.h);
 	}
 }

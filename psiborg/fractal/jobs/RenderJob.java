@@ -7,13 +7,13 @@ public class RenderJob {
 	private static long oldId = -1L;
 	
 	public final long id;
-	public final Viewport view;
 	public final Viewport segment;
+	public final Viewport view;
 	
-	public RenderJob(Viewport view, Viewport segment) {
+	public RenderJob(Viewport segment, Viewport view) {
 		this.id = getId();
-		this.view = view;
 		this.segment = segment;
+		this.view = view;
 	}
 	
 	public boolean isActive() {
@@ -25,7 +25,7 @@ public class RenderJob {
 	}
 	
 	public static synchronized void quitActive() {
-		oldId = jobId;
+		oldId = jobId-1;
 	}
 	
 	private static synchronized long getId() {

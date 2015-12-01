@@ -15,10 +15,14 @@ import java.io.IOException;
 
 import javax.imageio.ImageIO;
 import javax.swing.JFrame;
+import javax.swing.SwingUtilities;
 import javax.swing.event.MouseInputListener;
 
 import psiborg.fractal.colors.ColorMap;
 import psiborg.fractal.generators.FractalGenerator;
+import psiborg.fractal.jobs.JobFactory;
+import psiborg.fractal.jobs.JobQueue;
+import psiborg.fractal.jobs.RenderJob;
 
 public class ComplexPointDisplay extends JFrame implements MouseInputListener, KeyListener {
 	private static final long serialVersionUID = 1L;
@@ -63,7 +67,7 @@ public class ComplexPointDisplay extends JFrame implements MouseInputListener, K
 		workers = new FractalWorker[NUM_WORKERS];
 		
 		for (int n = 0; n < NUM_WORKERS; n++) {
-			workers[n] = new FractalWorker(fractal, colors, image.getSubimage(0, image.getHeight() * n / NUM_WORKERS, image.getWidth(), image.getHeight() / NUM_WORKERS));
+			workers[n] = new FractalWorker(fractal, colors, image);
 			workers[n].start();
 		}
 
@@ -98,11 +102,18 @@ public class ComplexPointDisplay extends JFrame implements MouseInputListener, K
 			g2d.drawRect((int) dxStart, (int) dyStart, (int) (dxEnd - dxStart), (int) (dxEnd - dxStart));
 		}
 		
-		for (FractalWorker worker : workers) {
-			if (worker.isDirty()) {
-				repaint();
-				return;
+		if (JobQueue.isEmpty()) {
+			boolean dirty = false;
+			for (FractalWorker worker : workers) {
+				dirty = dirty || worker.isDirty();
 			}
+			
+			if (dirty) {
+				repaint();
+			}
+		} else {
+			repaint();
+			return;
 		}
 		
 		bench.stop();
@@ -191,9 +202,9 @@ public class ComplexPointDisplay extends JFrame implements MouseInputListener, K
 	private void startRedraw() {
 		bench.start();
 		
-		for (int n = 0; n < NUM_WORKERS; n++) {
-			workers[n].setView(viewX, viewY + viewH * n / NUM_WORKERS, viewW, viewH / NUM_WORKERS);
-		}
+		RenderJob.quitActive();
+		JobFactory.chunk(image.getRaster(), new Viewport(viewX, viewY, viewW, viewH), 2);
+		
 		repaint();
 	}
 

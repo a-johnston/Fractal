@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Viewport {
-	private double x, y, w, h;
+	public final double x, y, w, h;
 
 	public Viewport(double x, double y, double w, double h) {
 		this.x = x;
