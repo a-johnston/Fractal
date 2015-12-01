@@ -10,7 +10,10 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
 
+import javax.imageio.ImageIO;
 import javax.swing.JFrame;
 import javax.swing.event.MouseInputListener;
 
@@ -123,6 +126,14 @@ public class ComplexPointDisplay extends JFrame implements MouseInputListener, K
 			lvl *= 2.0;
 		}
 		switch (e.getKeyCode()) {
+		case KeyEvent.VK_S:
+			File output = new File("out.png");
+			try {
+				ImageIO.write(image, "png", output);
+				System.out.println("Wrote to 'out.png'");
+			} catch (IOException e1) {
+				e1.printStackTrace();
+			}
 		case KeyEvent.VK_LEFT:
 			viewX -= lvl;
 			startRedraw();
@@ -190,6 +201,11 @@ public class ComplexPointDisplay extends JFrame implements MouseInputListener, K
 
 	@Override
 	public void mouseReleased(MouseEvent e) {
+		if (Math.abs(dxStart - e.getX()) < 10 && Math.abs(dyStart - e.getY()) < 10) {
+			dxStart = -1;
+			return;
+		}
+		
 		dxStart = getX((int) dxStart * SUPERSAMPLE);
 		dyStart = -getY((int) dyStart * SUPERSAMPLE);
 		dxEnd = getX(e.getX() * SUPERSAMPLE);
