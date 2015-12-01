@@ -12,6 +12,7 @@ public class FractalWorker extends Thread {
 	
 	private boolean dirty;
 	private boolean restart;
+	private int left;
 	
 	private double viewX;
 	private double viewY;
@@ -28,6 +29,10 @@ public class FractalWorker extends Thread {
 		this.value = new MutableComplexDouble(0.0, 0.0);
 		this.fractal = fractal;
 		this.colors = colors;
+		
+		this.dirty = false;
+		this.restart = false;
+		this.left = Integer.MAX_VALUE;
 	}
 	
 	public synchronized void setView(double x, double y, double w, double h) {
@@ -76,8 +81,9 @@ public class FractalWorker extends Thread {
 					
 					value.set(px, getY(y));
 					int steps = fractal.steps(value);
-					raster.setPixel(x, y, colors.get(steps));	
+					raster.setPixel(x, y, colors.get(steps));
 				}
+				left = (image.getWidth() - x - 1) * image.getHeight();
 			}
 			synchronized (this) {				
 				dirty = false;
