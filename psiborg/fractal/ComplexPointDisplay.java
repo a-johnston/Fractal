@@ -44,7 +44,7 @@ public class ComplexPointDisplay extends JFrame implements MouseInputListener, K
 	private double dyEnd;
 
 	public ComplexPointDisplay(FractalGenerator fractal, ColorMap colors) {
-		Dimension d = new Dimension(800, 600);
+		Dimension d = new Dimension(1920, 1080);
 
 		image = new BufferedImage(d.width * SUPERSAMPLE, d.height * SUPERSAMPLE, BufferedImage.TYPE_3BYTE_BGR);
 		
@@ -132,8 +132,12 @@ public class ComplexPointDisplay extends JFrame implements MouseInputListener, K
 				ImageIO.write(image, "png", output);
 				System.out.println("Wrote to 'out.png'");
 			} catch (IOException e1) {
-				e1.printStackTrace();
+				System.out.println("Failed to write image!");
 			}
+			break;
+		case KeyEvent.VK_R:
+			repaint();
+			break;
 		case KeyEvent.VK_LEFT:
 			viewX -= lvl;
 			startRedraw();
