@@ -11,11 +11,15 @@ public class JuliaGenerator implements FractalGenerator {
 	public int steps(MutableComplexDouble z) {
 		int steps = 0;
 		
-		while (z.norm2() < 4.0 && steps < THRESHOLD_STEPS) {
+		while (steps < THRESHOLD_STEPS) {
+			if (z.norm2() > 4.0) {
+				return steps;
+			}
+			
 			z.sqrplusc(c);
 			steps++;
 		}
 		
-		return steps;
+		return -1;
 	}
 }

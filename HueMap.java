@@ -20,6 +20,9 @@ public class HueMap implements ColorMap {
 	
 	@Override
 	public int[] get(int n) {
+		if (n == -1) {
+			return BLACK;
+		}
 		return colors[n % colors.length];
 	}
 

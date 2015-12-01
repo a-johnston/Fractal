@@ -1,5 +1,3 @@
-import java.awt.Color;
-import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.awt.image.WritableRaster;
 
@@ -8,6 +6,7 @@ public class FractalWorker extends Thread {
 	private WritableRaster raster;
 	
 	private boolean dirty;
+	private boolean restart;
 	
 	private double viewX;
 	private double viewY;
@@ -35,24 +34,48 @@ public class FractalWorker extends Thread {
 		if (!dirty) {
 			dirty = true;
 			notify();
+		} else {
+			restart = true;
+		}
+	}
+	
+	public boolean isDirty() {
+		synchronized (this) {			
+			return dirty;
 		}
 	}
 	
 	@Override
 	public void run() {
 		while (true) {
-			try {
-				wait();
-			} catch (InterruptedException e) {}
+			while (!dirty) {
+				synchronized (this) {				
+					try {
+						wait();
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+				}
+			}
 			int x, y;
-			double px, py;
+			double px;
 			for (x = 0; x < image.getWidth(); x += 1) {
 				px = getX(x);
 				for (y = 0; y < image.getHeight(); y += 1) {
+					if (restart) {
+						x = 0;
+						y = 0;
+						restart = false;
+						continue;
+					}
+					
 					value.set(px, getY(y));
 					int steps = fractal.steps(value);
 					raster.setPixel(x, y, colors.get(steps));	
 				}
+			}
+			synchronized (this) {				
+				dirty = false;
 			}
 		}
 	}

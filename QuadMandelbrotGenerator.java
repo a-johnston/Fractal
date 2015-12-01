@@ -5,11 +5,15 @@ public class QuadMandelbrotGenerator implements FractalGenerator {
 		
 		MutableComplexDouble z = new MutableComplexDouble(c);
 		
-		while (z.norm2() < 16.0 && steps < THRESHOLD_STEPS) {
+		while (steps < THRESHOLD_STEPS) {
+			if (z.norm2() > 16.0) {
+				return steps;
+			}
+			
 			z.mult(z.mult(z)).add(c);
 			steps++;
 		}
 		
-		return steps;
+		return -1;
 	}
 }

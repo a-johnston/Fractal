@@ -5,19 +5,15 @@ public class MandelbrotGenerator implements FractalGenerator {
 		
 		MutableComplexDouble z = new MutableComplexDouble(c);
 		
-		double normie = 0.0;
-		
-		while (normie < 16.0 && steps < THRESHOLD_STEPS) {
+		while (steps < THRESHOLD_STEPS) {
+			if (z.norm2() > 16.0) {
+				return steps;
+			}
+			
 			z.sqrplusc(c);
 			steps++;
-			
-			normie = z.norm2();
-			
-//			if (normie < 0.01) {
-//				return THRESHOLD_STEPS;
-//			}
 		}
 		
-		return steps;
+		return -1;
 	}
 }
