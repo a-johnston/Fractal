@@ -12,6 +12,12 @@ public class MutableComplexDouble {
 		set(source.x, source.y);
 	}
 	
+	public MutableComplexDouble set(MutableComplexDouble source) {
+		this.x = source.x;
+		this.y = source.y;
+		return this;
+	}
+	
 	public MutableComplexDouble set(double x, double y) {
 		this.x = x;
 		this.y = y;
@@ -38,6 +44,12 @@ public class MutableComplexDouble {
 		x = x * x - y * y + c.x;
 		y = t * y + y * t + c.y;
 		
+		return this;
+	}
+	
+	public MutableComplexDouble abs() {
+		x = Math.abs(x);
+		y = Math.abs(y);
 		return this;
 	}
 	

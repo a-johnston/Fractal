@@ -2,23 +2,31 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
-import java.awt.GraphicsEnvironment;
+import java.awt.RenderingHints;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
+import java.awt.image.WritableRaster;
+import java.io.File;
+import java.io.IOException;
 
+import javax.imageio.ImageIO;
 import javax.swing.JFrame;
 import javax.swing.event.MouseInputListener;
 
 public class ComplexPointDisplay extends JFrame implements MouseInputListener, KeyListener {
 	private static final long serialVersionUID = 1L;
+	
+	public static final int SUPERSAMPLE = 1;
+	public static final int STEPS_PER_FRAME = 25000;
 
 	private BufferedImage image;
 	private FractalGenerator fractal;
 	private MutableComplexDouble value;
-	private Graphics2D imageGraphics;
+	private WritableRaster raster;
+	private ColorMap map;
 	private int i, j;
 	private double y;
 
@@ -37,18 +45,21 @@ public class ComplexPointDisplay extends JFrame implements MouseInputListener, K
 	private int lastSize = Integer.MAX_VALUE;
 	private int chunkSize = chunkMax;
 
-	public ComplexPointDisplay(FractalGenerator fractal) {
+	public ComplexPointDisplay(FractalGenerator fractal, ColorMap colors) {
 		this.fractal = fractal;
-		Dimension d = new Dimension(1920, 1080);
+		Dimension d = new Dimension(800, 600);
 
-		image = new BufferedImage(d.width, d.height, BufferedImage.TYPE_INT_RGB);
-		imageGraphics = image.createGraphics();
+		image = new BufferedImage(d.width * SUPERSAMPLE, d.height * SUPERSAMPLE, BufferedImage.TYPE_3BYTE_BGR);
+		raster = image.getRaster();
 		value = new MutableComplexDouble(0, 0);
+
+		this.map = colors;
+		this.map.generate(500);
 
 		dxStart = -1;
 
 		ar = (double) d.height / (double) d.width;
-		
+
 		viewX = -2.0;
 		viewY = -2.0 * ar;
 		viewW = 4.0;
@@ -57,7 +68,7 @@ public class ComplexPointDisplay extends JFrame implements MouseInputListener, K
 		setSize(d);
 		setMinimumSize(d);
 		setMaximumSize(d);
-		setUndecorated(true);
+		//		setUndecorated(true);
 
 		setVisible(true);
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -71,28 +82,37 @@ public class ComplexPointDisplay extends JFrame implements MouseInputListener, K
 	public void paint(Graphics g) {
 		Graphics2D g2d = (Graphics2D) g;
 
-		g2d.drawImage(image, 0, 0, null);
+		g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+		g2d.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+		g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+		
+		g2d.drawImage(image, 0, 0, getWidth(), getHeight(), null);
 
 		if (dxStart != -1) {
 			g2d.setColor(Color.BLACK);
 			g2d.drawRect((int) dxStart, (int) dyStart, (int) (dxEnd - dxStart), (int) (dxEnd - dxStart));
 		}
 
-		for (int n = 0; n < 1000; n++) {
-			if (j < getHeight()) {
+		int steps;
+
+		int[] color;
+		int[] black = {0, 0, 0};
+
+		for (int n = 0; n < STEPS_PER_FRAME; n++) {
+			if (j < image.getHeight()) {
 				y = getY(j);
-				if (i < getWidth()) {
+				if (i < image.getWidth()) {
 					if (i % lastSize != 0 || j % lastSize != 0) {
 						value.set(getX(i), y);
-						int steps = fractal.steps(value);
+						steps = fractal.steps(value);
 
-						imageGraphics.setColor(Color.getHSBColor((steps / 100f), 1f, steps == FractalGenerator.THRESHOLD_STEPS ? 0f : 1f));
-
-						if (chunkSize > 1) {
-							imageGraphics.fillRect(i, j, chunkSize, chunkSize);
+						if (steps == FractalGenerator.THRESHOLD_STEPS) {
+							color = black;
 						} else {
-							imageGraphics.drawLine(i, j, i, j);
+							color = map.get(steps);
 						}
+						
+						raster.setPixel(i, j, color);
 					}
 					i += chunkSize;
 				} else {
@@ -105,9 +125,16 @@ public class ComplexPointDisplay extends JFrame implements MouseInputListener, K
 				if (chunkSize > 1) {
 					lastSize = chunkSize;
 					chunkSize = chunkSize >> 1;
-					j = 0;
-					this.repaint();
-				} else if (chunkSize == 0) {
+							j = 0;
+							this.repaint();
+				} else {
+					g2d.drawChars("Ready".toCharArray(), 0, 5, 10, 40);
+					File output = new File("/home/adam/output.png");
+					try {
+						ImageIO.write(image, "png", output);
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
 					break;
 				}
 			}
@@ -115,11 +142,11 @@ public class ComplexPointDisplay extends JFrame implements MouseInputListener, K
 	}
 
 	private double getX(int x) {
-		return (x / (double) getWidth()) * viewW + viewX;
+		return (x / (double) image.getWidth()) * viewW + viewX;
 	}
 
 	private double getY(int y) {
-		return -viewY - (y / (double) getHeight() * viewH);
+		return -viewY - (y / (double) image.getHeight() * viewH);
 	}
 
 	@Override
@@ -198,10 +225,10 @@ public class ComplexPointDisplay extends JFrame implements MouseInputListener, K
 
 	@Override
 	public void mouseReleased(MouseEvent e) {
-		dxStart = getX((int) dxStart);
-		dyStart = -getY((int) dyStart);
-		dxEnd = getX(e.getX());
-		dyEnd = -getY(e.getY());
+		dxStart = getX((int) dxStart * SUPERSAMPLE);
+		dyStart = -getY((int) dyStart * SUPERSAMPLE);
+		dxEnd = getX(e.getX() * SUPERSAMPLE);
+		dyEnd = -getY(e.getY() * SUPERSAMPLE);
 
 		viewX = Math.min(dxStart, dxEnd);
 		viewY = Math.min(dyStart, dyEnd);
