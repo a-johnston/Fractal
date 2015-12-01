@@ -10,14 +10,23 @@ public class RenderJob {
 	public final Viewport segment;
 	public final Viewport view;
 	
-	public RenderJob(Viewport segment, Viewport view) {
+	private final Runnable callback;
+	
+	public RenderJob(Viewport segment, Viewport view, Runnable callback) {
 		this.id = getId();
 		this.segment = segment;
 		this.view = view;
+		this.callback = callback;
 	}
 	
 	public boolean isActive() {
 		return id > oldId;
+	}
+	
+	public void finish() {
+		if (callback != null) {
+			callback.run();
+		}
 	}
 	
 	public static synchronized long getLastId() {

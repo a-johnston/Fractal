@@ -20,11 +20,14 @@ public class FractalWorker extends Thread {
 	private FractalGenerator fractal;
 	private ColorMap colors;
 	
-	public FractalWorker(FractalGenerator fractal, ColorMap colors, BufferedImage image) {
+	private Runnable callback;
+	
+	public FractalWorker(FractalGenerator fractal, ColorMap colors, BufferedImage image, Runnable callback) {
 		this.raster = image.getRaster();
 		this.value = new MutableComplexDouble(0.0, 0.0);
 		this.fractal = fractal;
 		this.colors = colors;
+		this.callback = callback;
 	}
 	
 	@Override
@@ -56,6 +59,7 @@ public class FractalWorker extends Thread {
 				complete = x + 1;
 			}
 			
+			job.finish();
 			dirty = false;
 		}
 	}
@@ -66,8 +70,8 @@ public class FractalWorker extends Thread {
 		}
 		
 		double mid = Math.round(((double) complete / job.segment.w + 1.0) / 2.0);
-		JobQueue.addJob(new RenderJob(job.segment.subview(mid, 1.0), job.view));
-		this.job = new RenderJob(job.segment.subview(0.0, mid), job.view);
+		JobQueue.addJob(new RenderJob(job.segment.subview(mid, 1.0), job.view, callback));
+		this.job = new RenderJob(job.segment.subview(0.0, mid), job.view, callback);
 	}
 	
 	public double left() {
