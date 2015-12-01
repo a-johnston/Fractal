@@ -1,7 +1,8 @@
 #Fractal Renderer
 
-Uses Java to render defined fractals. Supports Julia and Mandelbrot sets.
+Uses Java to render complex fractals. Supports Julia and Mandelbrot sets + variations. Somewhat performant.
 
 Future improvements:
-- More color options
-- Worker pool to take advantage of clearly parallel task
+- Better color options
+- Better worker delegation
+- Animated fractals
