@@ -28,7 +28,7 @@ public class ComplexPointDisplay extends JFrame implements MouseInputListener, K
 	private static final long serialVersionUID = 1L;
 	
 	public static final int SUPERSAMPLE = 1;
-	public static final int NUM_WORKERS = 8;
+	public static final int NUM_WORKERS = 4;
 
 	private BufferedImage image;
 	private FractalWorker[] workers;
@@ -91,9 +91,10 @@ public class ComplexPointDisplay extends JFrame implements MouseInputListener, K
 	public void paint(Graphics g) {
 		Graphics2D g2d = (Graphics2D) g;
 
-		g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-		g2d.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
-		g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+		if (SUPERSAMPLE > 1) {
+			g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+			g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
+		}
 		
 		g2d.drawImage(image, 0, 0, getWidth(), getHeight(), null);
 
@@ -104,12 +105,23 @@ public class ComplexPointDisplay extends JFrame implements MouseInputListener, K
 		
 		if (JobQueue.isEmpty()) {
 			boolean dirty = false;
+			boolean free = false;
 			for (FractalWorker worker : workers) {
 				dirty = dirty || worker.isDirty();
+				free = free || !worker.isDirty();
 			}
 			
 			if (dirty) {
 				repaint();
+				
+				if (free) {
+					FractalWorker w = getSlowestWorker();
+					
+					if (w != null) {
+						w.split();
+					}
+				}
+				return;
 			}
 		} else {
 			repaint();
@@ -125,6 +137,22 @@ public class ComplexPointDisplay extends JFrame implements MouseInputListener, K
 
 	private double getY(int y) {
 		return -viewY - (y / (double) image.getHeight() * viewH);
+	}
+	
+	private FractalWorker getSlowestWorker() {
+		FractalWorker slow = null;
+		double left = 10;
+		double t;
+		
+		for (FractalWorker worker : workers) {
+			t = worker.left();
+			if (t > left) {
+				left = t;
+				slow = worker;
+			}
+		}
+		
+		return slow;
 	}
 
 	@Override

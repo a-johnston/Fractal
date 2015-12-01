@@ -13,6 +13,10 @@ public class Viewport {
 		this.h = h;
 	}
 	
+	public Viewport subview(double start, double end) {
+		return new Viewport(Math.floor(x + w * start), y, Math.floor(w * (end - start)), h);
+	}
+	
 	public List<Viewport> tesselate(int depth) {
 		List<Viewport> l = new ArrayList<>(2 << depth);
 
@@ -29,5 +33,10 @@ public class Viewport {
 			l.addAll(new Viewport(x + mw, y + mh, mw, mh).tesselate(depth));
 		}
 		return l;
+	}
+	
+	@Override
+	public String toString() {
+		return "[ " + x + ", " + y + ", " + w + ", " + h + " ]";
 	}
 }

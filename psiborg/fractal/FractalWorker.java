@@ -14,6 +14,8 @@ public class FractalWorker extends Thread {
 	private RenderJob job;
 	private boolean dirty;
 	
+	private int complete;
+	
 	private MutableComplexDouble value;
 	private FractalGenerator fractal;
 	private ColorMap colors;
@@ -38,17 +40,38 @@ public class FractalWorker extends Thread {
 				px = getX((int) job.segment.x + x);
 				for (y = 0; y < job.segment.h; y += 1) {
 					if (!job.isActive()) {
+						x = (int) job.segment.w;
+						y = (int) job.segment.h;
 						break;
 					}
 					
 					value.set(px, getY((int) job.segment.y + y));
 					int steps = fractal.steps(value);
-					raster.setPixel((int) (job.segment.x + x % raster.getWidth()), (int) (job.segment.y + y % raster.getHeight()), colors.get(steps));
+					try {
+						raster.setPixel((int) (job.segment.x + x), (int) (job.segment.y + y), colors.get(steps));
+					} catch (ArrayIndexOutOfBoundsException e) {
+						System.out.println(job.segment);
+					}
 				}
+				complete = x + 1;
 			}
 			
 			dirty = false;
 		}
+	}
+	
+	public void split() {
+		if (job == null) {
+			return;
+		}
+		
+		double mid = Math.round(((double) complete / job.segment.w + 1.0) / 2.0);
+		JobQueue.addJob(new RenderJob(job.segment.subview(mid, 1.0), job.view));
+		this.job = new RenderJob(job.segment.subview(0.0, mid), job.view);
+	}
+	
+	public double left() {
+		return job.segment.w - complete;
 	}
 	
 	public boolean isDirty() {
