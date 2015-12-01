@@ -15,25 +15,26 @@ import java.io.IOException;
 
 import javax.imageio.ImageIO;
 import javax.swing.JFrame;
-import javax.swing.SwingUtilities;
 import javax.swing.event.MouseInputListener;
 
 import psiborg.fractal.colors.ColorMap;
+import psiborg.fractal.colors.HueMap;
 import psiborg.fractal.generators.FractalGenerator;
+import psiborg.fractal.generators.MandelbrotGenerator;
 import psiborg.fractal.jobs.JobFactory;
 import psiborg.fractal.jobs.JobQueue;
 import psiborg.fractal.jobs.RenderJob;
 
 public class ComplexPointDisplay extends JFrame implements MouseInputListener, KeyListener {
 	private static final long serialVersionUID = 1L;
-	
-	public static final int SUPERSAMPLE = 1;
-	public static final int NUM_WORKERS = 4;
+
+	private final int SUPERSAMPLE;
+	private final int NUM_WORKERS;
 
 	private BufferedImage image;
 	private FractalWorker[] workers;
 	private ColorMap map;
-	
+
 	private Benchmark bench;
 
 	private double viewX;
@@ -47,11 +48,26 @@ public class ComplexPointDisplay extends JFrame implements MouseInputListener, K
 	private double dxEnd;
 	private double dyEnd;
 
+	public ComplexPointDisplay() {
+		this(new MandelbrotGenerator());
+	}
+
+	public ComplexPointDisplay(FractalGenerator fractal) {
+		this(fractal, new HueMap());
+	}
+
 	public ComplexPointDisplay(FractalGenerator fractal, ColorMap colors) {
-		Dimension d = new Dimension(800, 600);
+		this(fractal, colors, 8, 1);
+	}
+
+	public ComplexPointDisplay(FractalGenerator fractal, ColorMap colors, int workers, int supersample) {
+		this.NUM_WORKERS = workers;
+		this.SUPERSAMPLE = supersample;
+		
+		Dimension d = new Dimension(1920, 1080);
 
 		image = new BufferedImage(d.width * SUPERSAMPLE, d.height * SUPERSAMPLE, BufferedImage.TYPE_3BYTE_BGR);
-		
+
 		this.map = colors;
 		this.map.generate(500);
 
@@ -63,12 +79,12 @@ public class ComplexPointDisplay extends JFrame implements MouseInputListener, K
 		viewY = -2.0 * ar;
 		viewW = 4.0;
 		viewH = viewW * ar;
-		
-		workers = new FractalWorker[NUM_WORKERS];
-		
+
+		this.workers = new FractalWorker[NUM_WORKERS];
+
 		for (int n = 0; n < NUM_WORKERS; n++) {
-			workers[n] = new FractalWorker(fractal, colors, image);
-			workers[n].start();
+			this.workers[n] = new FractalWorker(fractal, colors, image);
+			this.workers[n].start();
 		}
 
 		setSize(d);
@@ -81,9 +97,9 @@ public class ComplexPointDisplay extends JFrame implements MouseInputListener, K
 		addMouseListener(this);
 		addMouseMotionListener(this);
 		addKeyListener(this);
-		
+
 		bench = new Benchmark("Frame complete");
-		
+
 		startRedraw();
 	}
 
@@ -95,14 +111,14 @@ public class ComplexPointDisplay extends JFrame implements MouseInputListener, K
 			g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 			g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
 		}
-		
+
 		g2d.drawImage(image, 0, 0, getWidth(), getHeight(), null);
 
 		if (dxStart != -1) {
 			g2d.setColor(Color.BLACK);
 			g2d.drawRect((int) dxStart, (int) dyStart, (int) (dxEnd - dxStart), (int) (dxEnd - dxStart));
 		}
-		
+
 		if (JobQueue.isEmpty()) {
 			boolean dirty = false;
 			boolean free = false;
@@ -110,13 +126,13 @@ public class ComplexPointDisplay extends JFrame implements MouseInputListener, K
 				dirty = dirty || worker.isDirty();
 				free = free || !worker.isDirty();
 			}
-			
+
 			if (dirty) {
 				repaint();
-				
+
 				if (free) {
 					FractalWorker w = getSlowestWorker();
-					
+
 					if (w != null) {
 						w.split();
 					}
@@ -127,7 +143,7 @@ public class ComplexPointDisplay extends JFrame implements MouseInputListener, K
 			repaint();
 			return;
 		}
-		
+
 		bench.stop();
 	}
 
@@ -138,12 +154,12 @@ public class ComplexPointDisplay extends JFrame implements MouseInputListener, K
 	private double getY(int y) {
 		return -viewY - (y / (double) image.getHeight() * viewH);
 	}
-	
+
 	private FractalWorker getSlowestWorker() {
 		FractalWorker slow = null;
 		double left = 10;
 		double t;
-		
+
 		for (FractalWorker worker : workers) {
 			t = worker.left();
 			if (t > left) {
@@ -151,7 +167,7 @@ public class ComplexPointDisplay extends JFrame implements MouseInputListener, K
 				slow = worker;
 			}
 		}
-		
+
 		return slow;
 	}
 
@@ -229,10 +245,10 @@ public class ComplexPointDisplay extends JFrame implements MouseInputListener, K
 
 	private void startRedraw() {
 		bench.start();
-		
+
 		RenderJob.quitActive();
 		JobFactory.chunk(image.getRaster(), new Viewport(viewX, viewY, viewW, viewH), 2);
-		
+
 		repaint();
 	}
 
@@ -248,7 +264,7 @@ public class ComplexPointDisplay extends JFrame implements MouseInputListener, K
 			dxStart = -1;
 			return;
 		}
-		
+
 		dxStart = getX((int) dxStart * SUPERSAMPLE);
 		dyStart = -getY((int) dyStart * SUPERSAMPLE);
 		dxEnd = getX(e.getX() * SUPERSAMPLE);
