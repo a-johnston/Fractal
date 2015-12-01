@@ -1,3 +1,4 @@
+package psiborg.fractal;
 
 public class Benchmark {
 	private String name;

@@ -1,5 +1,10 @@
+package psiborg.fractal;
+
 import java.awt.image.BufferedImage;
 import java.awt.image.WritableRaster;
+
+import psiborg.fractal.colors.ColorMap;
+import psiborg.fractal.generators.FractalGenerator;
 
 public class FractalWorker extends Thread {
 	private BufferedImage image;

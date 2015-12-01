@@ -1,3 +1,5 @@
+package psiborg.fractal.colors;
+
 public class GrayscaleMap implements ColorMap {
 
 	private int[][] colors;
@@ -19,5 +21,4 @@ public class GrayscaleMap implements ColorMap {
 	public int[] get(int n) {
 		return colors[n % colors.length];
 	}
-
 }

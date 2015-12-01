@@ -1,3 +1,5 @@
+package psiborg.fractal.colors;
+
 public class HueMap implements ColorMap {
 	private int[][] colors;
 	
@@ -25,5 +27,4 @@ public class HueMap implements ColorMap {
 		}
 		return colors[n % colors.length];
 	}
-
 }

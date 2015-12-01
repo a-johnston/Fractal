@@ -1,3 +1,5 @@
+package psiborg.fractal;
+
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
@@ -11,6 +13,9 @@ import java.awt.image.BufferedImage;
 
 import javax.swing.JFrame;
 import javax.swing.event.MouseInputListener;
+
+import psiborg.fractal.colors.ColorMap;
+import psiborg.fractal.generators.FractalGenerator;
 
 public class ComplexPointDisplay extends JFrame implements MouseInputListener, KeyListener {
 	private static final long serialVersionUID = 1L;

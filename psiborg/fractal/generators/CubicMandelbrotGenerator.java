@@ -1,3 +1,7 @@
+package psiborg.fractal.generators;
+
+import psiborg.fractal.MutableComplexDouble;
+
 public class CubicMandelbrotGenerator implements FractalGenerator {
 	@Override
 	public int steps(MutableComplexDouble c) {

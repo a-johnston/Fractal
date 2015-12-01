@@ -1,4 +1,8 @@
-public class MandelbrotGenerator implements FractalGenerator {
+package psiborg.fractal.generators;
+
+import psiborg.fractal.MutableComplexDouble;
+
+public class BurningShipGenerator implements FractalGenerator {
 	@Override
 	public int steps(MutableComplexDouble c) {
 		int steps = 0;
@@ -10,7 +14,7 @@ public class MandelbrotGenerator implements FractalGenerator {
 				return steps;
 			}
 			
-			z.sqrplusc(c);
+			z.abs().sqrplusc(c);
 			steps++;
 		}
 		

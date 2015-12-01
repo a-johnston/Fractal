@@ -1,3 +1,4 @@
+package psiborg.fractal;
 
 public class MutableComplexDouble {
 	public double x;

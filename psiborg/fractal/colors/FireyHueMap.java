@@ -1,3 +1,5 @@
+package psiborg.fractal.colors;
+
 public class FireyHueMap implements ColorMap {
 	private int[][] colors;
 	
@@ -20,5 +22,4 @@ public class FireyHueMap implements ColorMap {
 	public int[] get(int n) {
 		return colors[n % colors.length];
 	}
-
 }

@@ -1,3 +1,5 @@
+package psiborg.fractal.colors;
+
 public class IceyHueMap implements ColorMap {
 	private int[][] colors;
 	
