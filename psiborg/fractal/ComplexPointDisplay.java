@@ -23,7 +23,7 @@ import psiborg.fractal.generators.FractalGenerator;
 public class ComplexPointDisplay extends JFrame implements MouseInputListener, KeyListener {
 	private static final long serialVersionUID = 1L;
 	
-	public static final int SUPERSAMPLE = 2;
+	public static final int SUPERSAMPLE = 1;
 	public static final int NUM_WORKERS = 8;
 
 	private BufferedImage image;
@@ -44,7 +44,7 @@ public class ComplexPointDisplay extends JFrame implements MouseInputListener, K
 	private double dyEnd;
 
 	public ComplexPointDisplay(FractalGenerator fractal, ColorMap colors) {
-		Dimension d = new Dimension(1920, 1080);
+		Dimension d = new Dimension(800, 600);
 
 		image = new BufferedImage(d.width * SUPERSAMPLE, d.height * SUPERSAMPLE, BufferedImage.TYPE_3BYTE_BGR);
 		
