@@ -3,7 +3,6 @@ package psiborg.fractal.generators;
 import psiborg.fractal.MutableComplexDouble;
 
 public class JuliaGenerator implements FractalGenerator {
-	private static final int THRESHOLD_STEPS = 100;
 	
 	private final MutableComplexDouble c;
 	

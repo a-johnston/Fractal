@@ -38,6 +38,6 @@ public class RenderJob {
 	}
 	
 	private static synchronized long getId() {
-		return jobId++;
+		return ++jobId;
 	}
 }
