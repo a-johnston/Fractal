@@ -7,7 +7,7 @@ import psiborg.fractal.Viewport;
 public class JobFactory {
 	public static void chunk(Raster target, Viewport view, int times, Runnable callback) {
 		for (Viewport fragment : new Viewport(0, 0, target.getWidth(), target.getHeight()).tesselate(times)) {
-			JobQueue.addJob(new RenderJob(fragment, view, callback));
+			JobQueue.addJob(new RenderJob(fragment, view, callback, null));
 		}
 	}
 }

@@ -40,7 +40,7 @@ public class ComplexImage implements Runnable {
 
 	public ComplexImage(int width, int height, FractalGenerator fractal, ColorMap colors, int workers, int supersample) {
 		this.NUM_WORKERS = workers;
-		this.SUPERSAMPLE = supersample;
+		this.SUPERSAMPLE = 1;
 
 		image = new BufferedImage(width, height, BufferedImage.TYPE_3BYTE_BGR);
 		raw = new BufferedImage(width * SUPERSAMPLE, height * SUPERSAMPLE, BufferedImage.TYPE_3BYTE_BGR);
@@ -117,8 +117,7 @@ public class ComplexImage implements Runnable {
 			if (dirty) {
 				if (free) {
 					FractalWorker w = getSlowestWorker();
-
-					if (w != null) {
+					if (w != null && w.percentLeft() > 0.25) {
 						w.split();
 					}
 				}

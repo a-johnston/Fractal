@@ -3,7 +3,6 @@ package psiborg.fractal.jobs;
 import psiborg.fractal.Viewport;
 
 public class RenderJob {
-	private static long jobId = 0L;
 	private static long oldId = -1L;
 	
 	public final long id;
@@ -12,8 +11,8 @@ public class RenderJob {
 	
 	private final Runnable callback;
 	
-	public RenderJob(Viewport segment, Viewport view, Runnable callback) {
-		this.id = getId();
+	public RenderJob(Viewport segment, Viewport view, Runnable callback, RenderJob parent) {
+		this.id = parent == null ? getId() : parent.id;
 		this.segment = segment;
 		this.view = view;
 		this.callback = callback;
@@ -29,15 +28,11 @@ public class RenderJob {
 		}
 	}
 	
-	public static synchronized long getLastId() {
-		return jobId;
-	}
-	
 	public static synchronized void quitActive() {
-		oldId = jobId-1;
+		oldId = System.currentTimeMillis() - 1;
 	}
 	
 	private static synchronized long getId() {
-		return ++jobId;
+		return System.currentTimeMillis();
 	}
 }

@@ -50,11 +50,7 @@ public class FractalWorker extends Thread {
 					
 					value.set(px, getY((int) job.segment.y + y));
 					int steps = fractal.steps(value);
-					try {
-						raster.setPixel((int) (job.segment.x + x), (int) (job.segment.y + y), colors.get(steps));
-					} catch (ArrayIndexOutOfBoundsException e) {
-						System.out.println(job.segment);
-					}
+					raster.setPixel((int) (job.segment.x + x), (int) (job.segment.y + y), colors.get(steps));
 				}
 				complete = x + 1;
 			}
@@ -65,17 +61,21 @@ public class FractalWorker extends Thread {
 	}
 	
 	public void split() {
-		if (job == null) {
+		if (job == null || !job.isActive()) {
 			return;
 		}
 		
 		double mid = Math.round(((double) complete / job.segment.w + 1.0) / 2.0);
-		JobQueue.addJob(new RenderJob(job.segment.subview(mid, 1.0), job.view, callback));
-		this.job = new RenderJob(job.segment.subview(0.0, mid), job.view, callback);
+		JobQueue.addJob(new RenderJob(job.segment.subview(mid, 1.0), job.view, callback, this.job));
+		this.job = new RenderJob(job.segment.subview(0.0, mid), job.view, callback, this.job);
 	}
 	
 	public double left() {
 		return job.segment.w - complete;
+	}
+	
+	public double percentLeft() {
+		return left() / job.segment.w;
 	}
 	
 	public boolean isDirty() {
