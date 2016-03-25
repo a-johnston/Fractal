@@ -84,7 +84,7 @@ public class ComplexPointDisplay extends JFrame implements MouseInputListener, K
 
 		if (dxStart != -1) {
 			g2d.setColor(Color.BLACK);
-			g2d.drawRect((int) dxStart, (int) dyStart, (int) (dxEnd - dxStart), (int) (dxEnd - dxStart));
+			g2d.drawRect((int) dxStart, (int) dyStart, (int) (dxEnd - dxStart), (int) ((dxEnd - dxStart) * ar));
 		}
 
 		if (image.isDirty()) {
